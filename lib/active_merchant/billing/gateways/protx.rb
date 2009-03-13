@@ -24,9 +24,8 @@ module ActiveMerchant #:nodoc:
         :master => "MC",
         :delta => "DELTA",
         :solo => "SOLO",
-# Meastro support is not possible without 3D Secure with ProTX
-#        :switch => "MAESTRO",
-#        :maestro => "MAESTRO",
+        :switch => "MAESTRO",
+        :maestro => "MAESTRO",
         :american_express => "AMEX",
         :electron => "UKE",
         :diners_club => "DC",
