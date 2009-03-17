@@ -128,11 +128,11 @@ class RemoteProtxTest < Test::Unit::TestCase
     assert_success capture
   end
   
-  def test_successful_authorization_and_abort
+  def test_successful_authorization_and_void
     assert auth = @gateway.authorize(@amount, @mastercard, @options)
     assert_success auth    
      
-    assert abort = @gateway.abort(auth.authorization)
+    assert abort = @gateway.void(auth.authorization)
     assert_success abort
   end
   

@@ -100,15 +100,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         
         add_reference(post, identification)
-        commit(:void, post)
-      end
+        action = abort_or_void_from(identification)
 
-      # Because AUTHORIZED transactions cannot be VOIDED with ProTX, we need to call ABORT instead
-      def abort(identification, options = {})
-        post = {}
-        
-        add_reference(post, identification)
-        commit(:abort, post)
+        commit(action, post)
       end
 
       # Crediting requires a new order_id to passed in, as well as a description
@@ -237,7 +231,7 @@ module ActiveMerchant #:nodoc:
           
         Response.new(response["Status"] == APPROVED, message_from(response), response,
           :test => test?,
-          :authorization => authorization_from(response, parameters),
+          :authorization => authorization_from(response, parameters, action),
           :avs_result => { 
             :street_match => AVS_CVV_CODE[ response["AddressResult"] ],
             :postal_match => AVS_CVV_CODE[ response["PostCodeResult"] ],
@@ -246,13 +240,19 @@ module ActiveMerchant #:nodoc:
         )
       end
       
-      def authorization_from(response, params)
+      def authorization_from(response, params, action)
          [ params[:VendorTxCode],
            response["VPSTxId"],
            response["TxAuthNo"],
-           response["SecurityKey"] ].join(";")
+           response["SecurityKey"],
+           action ].join(";")
       end
-      
+
+      def abort_or_void_from(identification)
+        original_transaction = identification.split(';').last
+        original_transaction == 'authorization' ? :abort : :void
+      end
+
       def url_for(action)
         simulate ? build_simulator_url(action) : build_url(action)
       end

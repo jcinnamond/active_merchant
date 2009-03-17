@@ -31,7 +31,7 @@ class ProtxTest < Test::Unit::TestCase
     
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
-    assert_equal "1;B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520;4193753;OHMETD7DFK", response.authorization
+    assert_equal "1;B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520;4193753;OHMETD7DFK;purchase", response.authorization
     assert_success response
   end
 
