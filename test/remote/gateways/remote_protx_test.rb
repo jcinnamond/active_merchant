@@ -21,7 +21,18 @@ class RemoteProtxTest < Test::Unit::TestCase
       :type => 'american_express'
     )
 
-    
+    @maestro = CreditCard.new(
+      :number => '300000000000000004',
+      :month => 12,
+      :year => next_year,
+      :start_month => 12,
+      :start_year => next_year - 2,
+      :verification_value => 123,
+      :first_name => 'Tekin',
+      :last_name => 'Suleyman',
+      :type => 'maestro'
+    )
+
     @visa = CreditCard.new(
       :number => '4929000000006',
       :month => 6,
@@ -37,6 +48,8 @@ class RemoteProtxTest < Test::Unit::TestCase
       :month => 6,
       :year => next_year,
       :issue_number => 1,
+      :start_month => 12,
+      :start_year => next_year - 2,
       :verification_value => 227,
       :first_name => 'Tekin',
       :last_name => 'Suleyman',
@@ -162,7 +175,21 @@ class RemoteProtxTest < Test::Unit::TestCase
     assert response.test?
     assert !response.authorization.blank?
   end
-  
+
+  def test_successful_mastercard_purchase
+    assert response = @gateway.purchase(@amount, @mastercard, @options)
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_maestro_purchase
+    assert response = @gateway.purchase(@amount, @maestro, @options)
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
   def test_successful_solo_purchase
     assert response = @gateway.purchase(@amount, @solo, @options)
     assert_success response
