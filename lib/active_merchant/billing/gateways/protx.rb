@@ -7,6 +7,10 @@ module ActiveMerchant #:nodoc:
       TEST_URL = 'https://ukvpstest.protx.com/vspgateway/service'
       LIVE_URL = 'https://ukvps.protx.com/vspgateway/service'
       SIMULATOR_URL = 'https://ukvpstest.protx.com/VSPSimulator'
+
+      THREE_D_SECURE_TEST_URL = 'https://ukvpstest.protx.com/vspgateway/service/direct3dcallback.vsp'
+      THREE_D_SECURE_LIVE_URL = 'https://ukvps.protx.com/vspgateway/service/direct3dcallback.vsp'
+      THREE_D_SECURE_SIMULATOR_URL = 'https://ukvpstest.protx.com/VSPSimulator/VSPDirectCallback.asp'
     
       APPROVED = 'OK'
     
@@ -116,6 +120,11 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         
         commit(:credit, post)
+      end
+      
+      # Completes a 3D Secure transaction
+      def three_d_complete(pa_res, md)
+        commit(:three_d_complete, 'PARes' => pa_res, 'MD' => md)
       end
       
       private
@@ -236,7 +245,11 @@ module ActiveMerchant #:nodoc:
             :street_match => AVS_CVV_CODE[ response["AddressResult"] ],
             :postal_match => AVS_CVV_CODE[ response["PostCodeResult"] ],
           },
-          :cvv_result => AVS_CVV_CODE[ response["CV2Result"] ]
+          :cvv_result => AVS_CVV_CODE[ response["CV2Result"] ],
+          :three_d_secure => response["Status"] == '3DAUTH',
+          :pa_req => response["PAReq"],
+          :md => response["MD"],
+          :acs_url => response["ACSURL"]
         )
       end
       
@@ -258,13 +271,21 @@ module ActiveMerchant #:nodoc:
       end
       
       def build_url(action)
-        endpoint = [ :purchase, :authorization ].include?(action) ? "vspdirect-register" : TRANSACTIONS[action].downcase
-        "#{test? ? TEST_URL : LIVE_URL}/#{endpoint}.vsp"
+        if action == :three_d_complete
+          test? ? THREE_D_SECURE_TEST_URL : THREE_D_SECURE_LIVE_URL
+        else
+          endpoint = [ :purchase, :authorization ].include?(action) ? "vspdirect-register" : TRANSACTIONS[action].downcase
+          "#{test? ? TEST_URL : LIVE_URL}/#{endpoint}.vsp"
+        end
       end
       
       def build_simulator_url(action)
-        endpoint = [ :purchase, :authorization ].include?(action) ? "VSPDirectGateway.asp" : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
-        "#{SIMULATOR_URL}/#{endpoint}"
+        if action == :three_d_complete
+          THREE_D_SECURE_SIMULATOR_URL
+        else
+          endpoint = [ :purchase, :authorization ].include?(action) ? "VSPDirectGateway.asp" : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
+          "#{SIMULATOR_URL}/#{endpoint}"
+        end
       end
 
       def message_from(response)
