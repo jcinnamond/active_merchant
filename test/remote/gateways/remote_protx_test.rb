@@ -85,11 +85,6 @@ class RemoteProtxTest < Test::Unit::TestCase
       :last_name => 'Suleyman',
       :type => 'visa'
     )
-    
-    @electron = credit_card('4917300000000008',
-      :type => 'electron',
-      :verification_value => '123'
-    )
   
     @options = { 
       :billing_address => { 
