@@ -125,6 +125,18 @@ class RemoteProtxThreeDSecureTest < Test::Unit::TestCase
     assert_success three_d_secure_response
   end
 
+  def test_successful_three_d_secure_mastercard_authorization
+    response = @gateway.authorize(@amount, @mastercard, @options)
+
+    assert_failure response
+    assert_3d_secure response
+    
+    pa_res, md = retrieve_and_submit_three_d_secure_form(response, TEST_3D_PASSWORD)
+    three_d_secure_response = @gateway.three_d_complete(pa_res,md)
+    
+    assert_success three_d_secure_response
+  end
+
   def test_successful_three_d_secure_visa_purchase
     response = @gateway.purchase(@amount, @visa, @options)
 
