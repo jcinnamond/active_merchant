@@ -20,6 +20,18 @@ class BogusTest < Test::Unit::TestCase
     @gateway.purchase(1000, @creditcard)    
   end
 
+  def test_3d_secure_authorize
+    @gateway.capture(1000, credit_card('4'))
+  end
+
+  def test_3d_secure_purchase
+    @gateway.purchase(1000, credit_card('4'))
+  end
+  
+  def test_3d_complete
+    @gateway.three_d_complete('pa_res', 'md')
+  end
+
   def test_credit
     @gateway.credit(1000, @response.params["transid"])
   end
