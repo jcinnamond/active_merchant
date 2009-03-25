@@ -22,9 +22,10 @@ class RemoteProtxTest < Test::Unit::TestCase
     )
 
     @maestro = CreditCard.new(
-      :number => '300000000000000004',
+      :number => '5641820000000005',
       :month => 12,
       :year => next_year,
+      :issue_number => '01',
       :start_month => 12,
       :start_year => next_year - 2,
       :verification_value => 123,
