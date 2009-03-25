@@ -177,13 +177,6 @@ class RemoteProtxTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
-  def test_successful_mastercard_purchase
-    assert response = @gateway.purchase(@amount, @mastercard, @options)
-    assert_success response
-    assert response.test?
-    assert !response.authorization.blank?
-  end
-
   def test_successful_maestro_purchase
     assert response = @gateway.purchase(@amount, @maestro, @options)
     assert_success response
