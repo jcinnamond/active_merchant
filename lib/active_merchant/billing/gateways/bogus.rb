@@ -12,6 +12,11 @@ module ActiveMerchant #:nodoc:
       UNSTORE_ERROR_MESSAGE = "Bogus Gateway: Use trans_id 1 for success, 2 for exception and anything else for error"
       CAPTURE_ERROR_MESSAGE = "Bogus Gateway: Use authorization number 1 for exception, 2 for error and anything else for success"
       
+      THREE_D_MD = 'md'
+      THREE_D_PA_REQ = 'pa_req'
+      THREE_D_PA_RES = 'pa_res'
+      THREE_D_ACS_URL = 'https://domain.com/3d_secure_page'
+
       self.supported_countries = ['US']
       self.supported_cardtypes = [:bogus]
       self.homepage_url = 'http://example.com'
@@ -24,7 +29,7 @@ module ActiveMerchant #:nodoc:
         when '2'
           Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money.to_s, :error => FAILURE_MESSAGE }, :test => true)
         when '4'
-          Response.new(false, THREE_D_SECURE_MESSAGE, {:authorized_amount => money.to_s}, :three_d_secure => true, :pa_req => 'par_req', :md => 'md', :acs_url => 'https://domain.com/3d_secure_page', :test => true)
+          Response.new(false, THREE_D_SECURE_MESSAGE, {:authorized_amount => money.to_s}, :three_d_secure => true, :pa_req => THREE_D_PA_REQ, :md => THREE_D_MD, :acs_url => THREE_D_ACS_URL, :test => true)
         else
           raise Error, ERROR_MESSAGE
         end      
@@ -37,14 +42,14 @@ module ActiveMerchant #:nodoc:
         when '2'
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money.to_s, :error => FAILURE_MESSAGE },:test => true)
         when '4'
-          Response.new(false, THREE_D_SECURE_MESSAGE, {:paid_amount => money.to_s}, :three_d_secure => true, :pa_req => 'par_req', :md => 'md', :acs_url => 'https://domain.com/3d_secure_page', :test => true)
+          Response.new(false, THREE_D_SECURE_MESSAGE, {:paid_amount => money.to_s}, :three_d_secure => true, :pa_req => THREE_D_PA_REQ, :md => THREE_D_MD, :acs_url => THREE_D_ACS_URL, :test => true)
         else
           raise Error, ERROR_MESSAGE
         end
       end
  
       def three_d_complete(pa_res, md)
-        if pa_res == 'pa_res' && md == 'md'
+        if pa_res == THREE_D_PA_RES && md == THREE_D_MD
           Response.new(true, SUCCESS_MESSAGE, {}, :test => true, :authorization => AUTHORIZATION)
         else
           Response.new(false, FAILURE_MESSAGE, {},:test => true)

@@ -21,15 +21,30 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_3d_secure_authorize
-    @gateway.capture(1000, credit_card('4'))
+    response = @gateway.authorize(1000, credit_card('4'))
+    assert response.three_d_secure?
+    assert_equal BogusGateway::THREE_D_PA_REQ, response.pa_req
+    assert_equal BogusGateway::THREE_D_MD, response.md
+    assert_equal BogusGateway::THREE_D_ACS_URL, response.acs_url
   end
 
   def test_3d_secure_purchase
-    @gateway.purchase(1000, credit_card('4'))
+    response = @gateway.purchase(1000, credit_card('4'))
+    assert response.three_d_secure?
+    assert_equal BogusGateway::THREE_D_PA_REQ, response.pa_req
+    assert_equal BogusGateway::THREE_D_MD, response.md    
+    assert_equal BogusGateway::THREE_D_ACS_URL, response.acs_url
   end
   
   def test_3d_complete
-    @gateway.three_d_complete('pa_res', 'md')
+    response = @gateway.three_d_complete(BogusGateway::THREE_D_PA_RES, BogusGateway::THREE_D_MD)
+    assert_equal BogusGateway::SUCCESS_MESSAGE, response.message
+
+    response = @gateway.three_d_complete('incorrect PaRes', BogusGateway::THREE_D_MD)
+    assert_equal BogusGateway::FAILURE_MESSAGE, response.message
+    
+    response = @gateway.three_d_complete(BogusGateway::THREE_D_PA_RES, 'incorrect MD')
+    assert_equal BogusGateway::FAILURE_MESSAGE, response.message
   end
 
   def test_credit
