@@ -6,7 +6,7 @@ require File.dirname(__FILE__) + '/../../test_helper'
 # American express enabled.
 class RemoteProtxTest < Test::Unit::TestCase
   # set to true to run the tests in the simulated environment
-  ProtxGateway.simulate = false
+  ProtxGateway.simulate = true
   
   def setup
     @gateway = ProtxGateway.new(fixtures(:protx))
@@ -163,6 +163,15 @@ class RemoteProtxTest < Test::Unit::TestCase
     )
     
     assert_success credit
+  end
+
+  def test_successful_authorize_and_repeat
+    assert auth = @gateway.authorize(@amount, @mastercard, @options)
+    assert_success auth
+
+    @options[:order_id] = generate_unique_id
+    assert repeat = @gateway.purchase(@amount, auth.authorization, @options)
+    assert_success repeat
   end
   
   def test_successful_visa_purchase

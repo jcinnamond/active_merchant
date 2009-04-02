@@ -12,6 +12,7 @@ module ActiveMerchant #:nodoc:
     
       TRANSACTIONS = {
         :purchase => 'PAYMENT',
+        :repeat => 'REPEAT',
         :credit => 'REFUND',
         :authorization => 'DEFERRED',
         :capture => 'RELEASE',
@@ -58,18 +59,22 @@ module ActiveMerchant #:nodoc:
         @options[:test] || super
       end
       
-      def purchase(money, credit_card, options = {})
+      def purchase(money, credit_card_or_reference, options = {})
         requires!(options, :order_id)
         
         post = {}
         
         add_amount(post, money, options)
         add_invoice(post, options)
-        add_credit_card(post, credit_card)
+        add_payment_source(post, credit_card_or_reference)
         add_address(post, options)
         add_customer_data(post, options)
 
-        commit(:purchase, post)
+        if credit_card_or_reference.is_a?(String)
+          commit(:repeat, post)
+        else
+          commit(:purchase, post)
+        end
       end
       
       def authorize(money, credit_card, options = {})
@@ -119,6 +124,14 @@ module ActiveMerchant #:nodoc:
       end
       
       private
+      def add_payment_source(post, credit_card_or_reference)
+        if credit_card_or_reference.is_a?(String)
+          add_credit_reference(post, credit_card_or_reference)
+        else
+          add_credit_card(post, credit_card_or_reference)
+        end
+      end
+
       def add_reference(post, identification)
         order_id, transaction_id, authorization, security_key = identification.split(';') 
         
@@ -127,7 +140,7 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :TxAuthNo, authorization)
         add_pair(post, :SecurityKey, security_key)
       end
-      
+
       def add_credit_reference(post, identification)
         order_id, transaction_id, authorization, security_key = identification.split(';') 
         
