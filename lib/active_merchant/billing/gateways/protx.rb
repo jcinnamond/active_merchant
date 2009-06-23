@@ -15,6 +15,7 @@ module ActiveMerchant #:nodoc:
         :repeat => 'REPEAT',
         :credit => 'REFUND',
         :authorization => 'DEFERRED',
+        :authenticate => 'AUTHENTICATE',
         :capture => 'RELEASE',
         :void => 'VOID',
         :abort => 'ABORT'
@@ -77,20 +78,19 @@ module ActiveMerchant #:nodoc:
         end
       end
       
-      def authorize(money, credit_card_or_reference, options = {})
+      def authorize(money, credit_card, options = {})
         requires!(options, :order_id)
-        
+
         post = {}
         
         add_amount(post, money, options)
         add_invoice(post, options)
-        add_payment_source(post, credit_card_or_reference)
+        add_credit_card(post, credit_card)
         add_address(post, options)
         add_customer_data(post, options)
 
-        if credit_card_or_reference.is_a?(String)
-          add_tx_type(post, :repeatdeferred)
-          commit(:repeat, post)
+        if options[:authenticate]
+          commit(:authenticate, post)
         else
           commit(:authorization, post)
         end
@@ -102,8 +102,12 @@ module ActiveMerchant #:nodoc:
         
         add_reference(post, identification)
         add_release_amount(post, money, options)
-        
-        commit(:capture, post)
+
+        if options[:authenticate]
+          commit(:authorise, post)
+        else
+          commit(:capture, post)
+        end
       end
       
       def void(identification, options = {})
@@ -138,7 +142,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, identification)
-        order_id, transaction_id, authorization, security_key = identification.split(';')
+        order_id, transaction_id, authorization, security_key = identification.split(';') 
         
         add_pair(post, :VendorTxCode, order_id)
         add_pair(post, :VPSTxId, transaction_id)
@@ -147,7 +151,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_reference(post, identification)
-        order_id, transaction_id, authorization, security_key = identification.split(';')
+        order_id, transaction_id, authorization, security_key = identification.split(';') 
         
         add_pair(post, :RelatedVendorTxCode, order_id)
         add_pair(post, :RelatedVPSTxId, transaction_id)
@@ -215,10 +219,6 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :CardType, map_card_type(credit_card))
         
         add_pair(post, :CV2, credit_card.verification_value)
-      end
-
-      def add_tx_type(post, type)
-        add_pair(post, :TxType, type.to_s.upcase)
       end
       
       def sanitize_order_id(order_id)
